@@ -22,8 +22,8 @@ st.set_page_config(
 # ============================================
 
 MODEL_METRICS = {
-    "Random Forest (Baseline)": {"MAE": 2714, "RMSE": 4816, "R2": 0.8738},
-    "Random Forest (Refined)": {"MAE": 2521, "RMSE": 4418, "R2": 0.8938},
+    "Random Forest Regressor (Baseline)": {"MAE": 2714, "RMSE": 4816, "R2": 0.8738},
+    "Random Forest Regressor (Refined)": {"MAE": 2521, "RMSE": 4418, "R2": 0.8938},
     "XGBoost (Refined)": {"MAE": 2154, "RMSE": 5174, "R2": 0.8543},
     "Winsorization": {"MAE": 2450, "RMSE": 4302, "R2": 0.8968},
     "Stacking Ensemble": {"MAE": 2450, "RMSE": 4279, "R2": 0.9004}
@@ -105,7 +105,7 @@ def load_models():
         y = df['charges']
         y_log = np.log(df['charges'])
         
-        # Train Random Forest
+        # Train Random Forest Regressor
         rf_model = RandomForestRegressor(
             n_estimators=100, max_depth=15, min_samples_split=10,
             min_samples_leaf=4, random_state=42, n_jobs=-1
@@ -166,7 +166,7 @@ st.sidebar.markdown("""
 
 st.title("🏥 Medical Insurance Cost Predictor")
 st.markdown("""
-### Compare predictions from Random Forest vs XGBoost models
+### Compare predictions from **Random Forest Regressor** vs **XGBoost** models
 *Real-time medical cost estimates based on personal health information*
 """)
 
@@ -221,7 +221,7 @@ features = np.array([[age, bmi, children, female_dm, smoker_dm,
 # PREDICTIONS
 # ============================================
 
-# Random Forest prediction (original scale)
+# Random Forest Regressor prediction (original scale)
 rf_prediction = rf_model.predict(features)[0]
 
 # XGBoost prediction (log scale, then exponentiate)
@@ -245,15 +245,15 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     st.metric(
-        label="🌲 Random Forest", 
+        label="🌲 **Random Forest Regressor**", 
         value=f"${rf_prediction:,.2f}",
-        delta=f"MAE: ${MODEL_METRICS['Random Forest (Refined)']['MAE']:,}",
+        delta=f"MAE: ${MODEL_METRICS['Random Forest Regressor (Refined)']['MAE']:,}",
         delta_color="off"
     )
 
 with col2:
     st.metric(
-        label="⚡ XGBoost", 
+        label="⚡ **XGBoost**", 
         value=f"${xgb_prediction:,.2f}",
         delta=f"MAE: ${MODEL_METRICS['XGBoost (Refined)']['MAE']:,}",
         delta_color="off"
@@ -261,7 +261,7 @@ with col2:
 
 with col3:
     st.metric(
-        label="🏆 Stacking Ensemble (Recommended)", 
+        label="🏆 **Stacking Ensemble (Recommended)**", 
         value=f"${stacking_prediction:,.2f}",
         delta=f"R²: 0.9004 | MAE: $2,450",
         delta_color="normal"
@@ -328,8 +328,8 @@ st.plotly_chart(fig2, use_container_width=True)
 st.subheader("🎯 Prediction Intervals (95%)")
 
 # Calculate confidence intervals based on actual RMSE values
-rf_ci_lower = rf_prediction - 1.96 * MODEL_METRICS['Random Forest (Refined)']['RMSE']
-rf_ci_upper = rf_prediction + 1.96 * MODEL_METRICS['Random Forest (Refined)']['RMSE']
+rf_ci_lower = rf_prediction - 1.96 * MODEL_METRICS['Random Forest Regressor (Refined)']['RMSE']
+rf_ci_upper = rf_prediction + 1.96 * MODEL_METRICS['Random Forest Regressor (Refined)']['RMSE']
 
 xgb_ci_lower = xgb_prediction - 1.96 * MODEL_METRICS['XGBoost (Refined)']['RMSE']
 xgb_ci_upper = xgb_prediction + 1.96 * MODEL_METRICS['XGBoost (Refined)']['RMSE']
@@ -338,7 +338,7 @@ stacking_ci_lower = stacking_prediction - 1.96 * MODEL_METRICS['Stacking Ensembl
 stacking_ci_upper = stacking_prediction + 1.96 * MODEL_METRICS['Stacking Ensemble']['RMSE']
 
 ci_data = pd.DataFrame({
-    'Model': ['Random Forest', 'XGBoost', 'Stacking Ensemble'],
+    'Model': ['Random Forest Regressor', 'XGBoost', 'Stacking Ensemble'],
     'Lower Bound': [rf_ci_lower, xgb_ci_lower, stacking_ci_lower],
     'Upper Bound': [rf_ci_upper, xgb_ci_upper, stacking_ci_upper],
     'Prediction': [rf_prediction, xgb_prediction, stacking_prediction]
@@ -372,8 +372,8 @@ st.plotly_chart(fig, use_container_width=True)
 st.info("""
 **Interpretation**: 
 - **Stacking Ensemble** has the narrowest confidence interval (best precision)
+- **Random Forest Regressor** provides balanced performance
 - **XGBoost** has the widest interval (higher uncertainty on high-cost claims)
-- **Random Forest** provides balanced performance
 """)
 
 # ============================================
@@ -383,7 +383,7 @@ st.info("""
 st.subheader("📈 Error Reduction Strategies - Performance Improvement")
 
 # Data from your actual outputs
-strategies = ['Baseline', 'Refined RF', 'Enhanced Features', 'Winsorization', 'Stacking']
+strategies = ['Baseline', 'Refined RF Regressor', 'Enhanced Features', 'Winsorization', 'Stacking']
 improvements = [0, 7.1, 7.0, 9.7, 9.7]
 
 fig = go.Figure()
@@ -405,6 +405,7 @@ st.markdown("""
 **Key Findings:**
 - ✅ **Winsorization** and **Stacking Ensemble** achieved the best improvement (9.7%)
 - ✅ Both strategies achieved MAE of **$2,450**
+- ✅ **Random Forest Regressor** improved by 7.1% after refinement
 - ✅ Stacking Ensemble achieved highest R² (**0.9004**)
 """)
 
@@ -436,7 +437,7 @@ for name, feat in scenarios.items():
     
     scenario_results.append({
         "Scenario": name,
-        "Random Forest": rf_pred,
+        "Random Forest Regressor": rf_pred,
         "XGBoost": xgb_pred,
         "Stacking (Avg)": (rf_pred + xgb_pred) / 2
     })
@@ -444,8 +445,8 @@ for name, feat in scenarios.items():
 scenario_df = pd.DataFrame(scenario_results)
 
 fig = go.Figure()
-fig.add_trace(go.Bar(name='Random Forest', x=scenario_df['Scenario'], 
-                     y=scenario_df['Random Forest'], marker_color='#3498db'))
+fig.add_trace(go.Bar(name='Random Forest Regressor', x=scenario_df['Scenario'], 
+                     y=scenario_df['Random Forest Regressor'], marker_color='#3498db'))
 fig.add_trace(go.Bar(name='XGBoost', x=scenario_df['Scenario'], 
                      y=scenario_df['XGBoost'], marker_color='#e74c3c'))
 fig.add_trace(go.Bar(name='Stacking Ensemble', x=scenario_df['Scenario'], 
@@ -501,7 +502,7 @@ st.markdown(f"""
 
 with st.expander("📊 View Feature Importance Analysis"):
     st.markdown("""
-    ### Feature Importance - Random Forest Model
+    ### Feature Importance - Random Forest Regressor Model
     
     | Feature | Importance | Business Impact |
     |---------|------------|-----------------|
@@ -567,7 +568,7 @@ with st.expander("📁 Batch Prediction - Compare All Models"):
                 with col1:
                     st.metric("Total Records", len(df))
                 with col2:
-                    st.metric("Avg RF Prediction", f"${df['rf_prediction'].mean():,.2f}")
+                    st.metric("Avg RF Regressor Prediction", f"${df['rf_prediction'].mean():,.2f}")
                 with col3:
                     st.metric("Avg XGB Prediction", f"${df['xgb_prediction'].mean():,.2f}")
                 with col4:
@@ -592,7 +593,8 @@ with st.expander("📁 Batch Prediction - Compare All Models"):
 st.markdown("---")
 st.markdown("""
 **About This App**:
-- Uses **Stacking Ensemble** (Random Forest + XGBoost) as primary model
+- Uses **Stacking Ensemble** (Random Forest Regressor + XGBoost) as primary model
+- **Random Forest Regressor Performance:** R² = 0.8938, MAE = $2,521
 - **Model Performance:** R² = 0.9004, MAE = $2,450, RMSE = $4,279
 - **Improvement:** 9.7% better than baseline
 - **Data Source:** Medical Cost Personal Dataset (1,337 records)
